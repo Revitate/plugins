@@ -447,6 +447,7 @@ NSString *const errorMethod = @"error";
       connection.videoOrientation =
           [self getVideoOrientationForDeviceOrientation:[[UIDevice currentDevice] orientation]];
     }
+  }
   if([_captureDevice position] == AVCaptureDevicePositionFront && connection.supportsVideoMirroring) {
     connection.videoMirrored = YES;
   }
