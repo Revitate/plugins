@@ -418,7 +418,18 @@ public class Camera {
         reader -> {
           try (Image image = reader.acquireLatestImage()) {
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-            if(isFrontFacing) updateExifMetadata(file.getAbsolutePath());
+             if (isFrontFacing) {
+              byte[] buf2 = new byte[buffer.remaining()];
+              buffer.get(buf2);
+              Bitmap bitmap = BitmapFactory.decodeByteArray(buf2, 0, buf2.length);
+              Matrix m = new Matrix();
+              m.preScale(-1, 1);
+              Bitmap dst = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, false);
+              dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
+              ByteArrayOutputStream stream = new ByteArrayOutputStream();
+              dst.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+              buffer = ByteBuffer.wrap(stream.toByteArray());
+            }
             writeToFile(buffer, file);
             pictureCaptureRequest.finish(file.getAbsolutePath());
           } catch (IOException e) {
@@ -432,13 +443,6 @@ public class Camera {
     } else {
       runPicturePreCapture();
     }
-  }
-
-  void updateExifMetadata(String filePath) throws IOException {
-    ExifInterface exif = new ExifInterface(filePath);
-    exif.setAttribute(
-        ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_TRANSVERSE));
-    exif.saveAttributes();
   }
 
   private final CameraCaptureSession.CaptureCallback pictureCaptureCallback =
