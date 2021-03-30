@@ -437,8 +437,25 @@ public class Camera {
 
   void updateExifMetadata(String filePath) throws IOException {
     ExifInterface exif = new ExifInterface(filePath);
-    exif.setAttribute(
-        ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_TRANSVERSE));
+    int rotation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+    switch (rotation) {
+      case ExifInterface.ORIENTATION_NORMAL:
+        exif.setAttribute(
+                ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_FLIP_HORIZONTAL));
+        break;
+      case ExifInterface.ORIENTATION_ROTATE_90:
+        exif.setAttribute(
+                ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_TRANSPOSE));
+        break;
+      case ExifInterface.ORIENTATION_ROTATE_270:
+        exif.setAttribute(
+                ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_TRANSVERSE));
+        break;
+      case ExifInterface.ORIENTATION_ROTATE_180:
+        exif.setAttribute(
+                ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_FLIP_VERTICAL));
+        break;
+    }
     exif.saveAttributes();
   }
 
