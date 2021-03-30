@@ -439,10 +439,6 @@ public class Camera {
     ExifInterface exif = new ExifInterface(filePath);
     int rotation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
     switch (rotation) {
-      case ExifInterface.ORIENTATION_NORMAL:
-        exif.setAttribute(
-                ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_FLIP_HORIZONTAL));
-        break;
       case ExifInterface.ORIENTATION_ROTATE_90:
         exif.setAttribute(
                 ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_TRANSPOSE));
@@ -454,6 +450,12 @@ public class Camera {
       case ExifInterface.ORIENTATION_ROTATE_180:
         exif.setAttribute(
                 ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_FLIP_VERTICAL));
+        break;
+      case ExifInterface.ORIENTATION_UNDEFINED:
+      case ExifInterface.ORIENTATION_NORMAL:
+      default:
+        exif.setAttribute(
+                ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_FLIP_HORIZONTAL));
         break;
     }
     exif.saveAttributes();
