@@ -10,10 +10,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
-import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -40,7 +37,6 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Range;
 import android.util.Rational;
@@ -59,7 +55,6 @@ import io.flutter.plugins.camera.types.FocusMode;
 import io.flutter.plugins.camera.types.ResolutionPreset;
 import io.flutter.view.TextureRegistry.SurfaceTextureEntry;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -424,19 +419,8 @@ public class Camera {
         reader -> {
           try (Image image = reader.acquireLatestImage()) {
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-             if (isFrontFacing) {
-              byte[] buf2 = new byte[buffer.remaining()];
-              buffer.get(buf2);
-              Bitmap bitmap = BitmapFactory.decodeByteArray(buf2, 0, buf2.length);
-              Matrix m = new Matrix();
-              m.preScale(-1, 1);
-              Bitmap dst = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, false);
-              dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
-              ByteArrayOutputStream stream = new ByteArrayOutputStream();
-              dst.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-              buffer = ByteBuffer.wrap(stream.toByteArray());
-            }
             writeToFile(buffer, file);
+            if(isFrontFacing) updateExifMetadata(file.getAbsolutePath());
             pictureCaptureRequest.finish(file.getAbsolutePath());
           } catch (IOException e) {
             pictureCaptureRequest.error("IOError", "Failed saving image", null);
@@ -449,6 +433,13 @@ public class Camera {
     } else {
       runPicturePreCapture();
     }
+  }
+
+  void updateExifMetadata(String filePath) throws IOException {
+    ExifInterface exif = new ExifInterface(filePath);
+    exif.setAttribute(
+        ExifInterface.TAG_ORIENTATION, String.valueOf(ExifInterface.ORIENTATION_TRANSVERSE));
+    exif.saveAttributes();
   }
 
   private final CameraCaptureSession.CaptureCallback pictureCaptureCallback =
